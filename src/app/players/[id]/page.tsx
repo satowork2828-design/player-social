@@ -6,9 +6,11 @@ import { getPlayerById } from '@/lib/services/players';
 import { getApprovedReviewsByPlayer } from '@/lib/services/reviews';
 import { getApprovedAds } from '@/lib/services/ads';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Star, MessageSquare, Quote, Trophy, Info, ShieldCheck } from 'lucide-react';
+import { Star, MessageSquare, Quote, Trophy, Info, ShieldCheck, GitCompare } from 'lucide-react';
 import { ReviewSummary } from '@/components/players/ReviewSummary';
+import { PlayerStatsChart } from '@/components/players/PlayerStatsChart';
 
 export default async function PlayerPage({ params }: { params: { id: string } }) {
   const { id } = await params;
@@ -23,7 +25,6 @@ export default async function PlayerPage({ params }: { params: { id: string } })
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-6xl">
-      {/* Header Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-16">
         <div className="lg:col-span-1">
           <div className="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl border border-border">
@@ -40,6 +41,12 @@ export default async function PlayerPage({ params }: { params: { id: string } })
               <h1 className="text-4xl font-headline font-bold">{player.name}</h1>
             </div>
           </div>
+          
+          <Link href={`/compare?p1=${player.id}`} className="mt-6 block">
+            <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-bold py-6">
+              <GitCompare className="w-5 h-5 mr-2" /> Compare with others
+            </Button>
+          </Link>
         </div>
 
         <div className="lg:col-span-2 flex flex-col justify-center">
@@ -57,36 +64,42 @@ export default async function PlayerPage({ params }: { params: { id: string } })
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-card/50 p-6 rounded-xl border border-border text-center">
-              <Trophy className="w-6 h-6 text-primary mx-auto mb-2" />
-              <span className="block text-2xl font-bold">{player.stats.matches}</span>
-              <span className="text-xs text-muted-foreground uppercase">Matches</span>
-            </div>
-            <div className="bg-card/50 p-6 rounded-xl border border-border text-center">
-              <Star className="w-6 h-6 text-accent mx-auto mb-2" />
-              <span className="block text-2xl font-bold">{player.stats.goals}</span>
-              <span className="text-xs text-muted-foreground uppercase">Goals</span>
-            </div>
-            <div className="bg-card/50 p-6 rounded-xl border border-border text-center">
-              <MessageSquare className="w-6 h-6 text-primary mx-auto mb-2" />
-              <span className="block text-2xl font-bold">{player.stats.assists}</span>
-              <span className="text-xs text-muted-foreground uppercase">Assists</span>
-            </div>
-            {player.stats.cleanSheets !== undefined && player.stats.cleanSheets > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div className="grid grid-cols-2 gap-4">
               <div className="bg-card/50 p-6 rounded-xl border border-border text-center">
-                <ShieldCheck className="w-6 h-6 text-accent mx-auto mb-2" />
-                <span className="block text-2xl font-bold">{player.stats.cleanSheets}</span>
-                <span className="text-xs text-muted-foreground uppercase">Clean Sheets</span>
+                <Trophy className="w-6 h-6 text-primary mx-auto mb-2" />
+                <span className="block text-2xl font-bold">{player.stats.matches}</span>
+                <span className="text-xs text-muted-foreground uppercase">Matches</span>
               </div>
-            )}
+              <div className="bg-card/50 p-6 rounded-xl border border-border text-center">
+                <Star className="w-6 h-6 text-accent mx-auto mb-2" />
+                <span className="block text-2xl font-bold">{player.stats.goals}</span>
+                <span className="text-xs text-muted-foreground uppercase">Goals</span>
+              </div>
+              <div className="bg-card/50 p-6 rounded-xl border border-border text-center">
+                <MessageSquare className="w-6 h-6 text-primary mx-auto mb-2" />
+                <span className="block text-2xl font-bold">{player.stats.assists}</span>
+                <span className="text-xs text-muted-foreground uppercase">Assists</span>
+              </div>
+              {player.stats.cleanSheets !== undefined && (
+                <div className="bg-card/50 p-6 rounded-xl border border-border text-center">
+                  <ShieldCheck className="w-6 h-6 text-accent mx-auto mb-2" />
+                  <span className="block text-2xl font-bold">{player.stats.cleanSheets}</span>
+                  <span className="text-xs text-muted-foreground uppercase">Clean Sheets</span>
+                </div>
+              )}
+            </div>
+            
+            <div className="bg-card/30 p-4 rounded-2xl border border-border/50">
+              <h4 className="text-sm font-bold text-center mb-2 text-muted-foreground uppercase tracking-wider">Technical Profile</h4>
+              <PlayerStatsChart player={player} />
+            </div>
           </div>
 
           <ReviewSummary reviews={playerReviews.map(r => r.content)} />
         </div>
       </div>
 
-      {/* Main Content: Reviews & Ads */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         <div className="lg:col-span-2 space-y-8">
           <div className="flex items-center gap-3 border-b border-border pb-4">
@@ -122,7 +135,6 @@ export default async function PlayerPage({ params }: { params: { id: string } })
           )}
         </div>
 
-        {/* Sidebar: Ads */}
         <div className="lg:col-span-1 space-y-6">
           <div className="flex items-center gap-3 border-b border-border pb-4">
             <Info className="w-6 h-6 text-accent" />

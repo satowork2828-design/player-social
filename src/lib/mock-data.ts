@@ -3,7 +3,7 @@ export interface Player {
   id: string;
   name: string;
   team: string;
-  position: string;
+  position: 'Forward' | 'Midfielder' | 'Defender' | 'Goalkeeper';
   age: number;
   rating: number;
   imageUrl: string;
@@ -12,6 +12,14 @@ export interface Player {
     assists: number;
     cleanSheets?: number;
     matches: number;
+  };
+  attributes: {
+    pace: number;
+    shooting: number;
+    passing: number;
+    dribbling: number;
+    defending: number;
+    physical: number;
   };
 }
 
@@ -44,7 +52,8 @@ export const players: Player[] = [
     age: 25,
     rating: 92,
     imageUrl: 'https://picsum.photos/seed/mbappe/400/500',
-    stats: { goals: 28, assists: 12, matches: 34 }
+    stats: { goals: 28, assists: 12, matches: 34 },
+    attributes: { pace: 97, shooting: 90, passing: 80, dribbling: 92, defending: 36, physical: 78 }
   },
   {
     id: '2',
@@ -54,70 +63,7 @@ export const players: Player[] = [
     age: 23,
     rating: 91,
     imageUrl: 'https://picsum.photos/seed/haaland/400/500',
-    stats: { goals: 32, assists: 5, matches: 30 }
-  },
-  {
-    id: '3',
-    name: 'Jude Bellingham',
-    team: 'Real Madrid',
-    position: 'Midfielder',
-    age: 20,
-    rating: 89,
-    imageUrl: 'https://picsum.photos/seed/bellingham/400/500',
-    stats: { goals: 18, assists: 15, matches: 36 }
-  },
-  {
-    id: '4',
-    name: 'Alisson Becker',
-    team: 'Liverpool',
-    position: 'Goalkeeper',
-    age: 31,
-    rating: 88,
-    imageUrl: 'https://picsum.photos/seed/alisson/400/500',
-    stats: { goals: 0, assists: 1, cleanSheets: 14, matches: 32 }
-  }
-];
-
-export const reviews: Review[] = [
-  {
-    id: 'r1',
-    playerId: '1',
-    author: 'Tactical Analyst',
-    rating: 5,
-    title: 'Unstoppable Force',
-    content: 'Mbappé\'s explosive pace and clinical finishing are unmatched. His movement off the ball creates chaos in any defensive line.',
-    status: 'approved',
-    createdAt: '2024-03-01'
-  },
-  {
-    id: 'r2',
-    playerId: '1',
-    author: 'Football Guru',
-    rating: 4,
-    title: 'Elite but expensive',
-    content: 'Great individual skill, but sometimes holds onto the ball too long. Still the best forward in the world right now.',
-    status: 'approved',
-    createdAt: '2024-03-05'
-  },
-  {
-    id: 'r3',
-    playerId: '2',
-    author: 'Scout Master',
-    rating: 5,
-    title: 'The Ultimate Goal Machine',
-    content: 'Haaland is a physical specimen. If he gets a touch in the box, it is almost certainly a goal.',
-    status: 'approved',
-    createdAt: '2024-02-15'
-  }
-];
-
-export const ads: AdSubmission[] = [
-  {
-    id: 'a1',
-    company: 'Nike',
-    title: 'Just Do It',
-    content: 'Get the latest Mercurial boots today.',
-    imageUrl: 'https://picsum.photos/seed/nike/400/300',
-    status: 'approved'
+    stats: { goals: 32, assists: 5, matches: 30 },
+    attributes: { pace: 89, shooting: 93, passing: 66, dribbling: 80, defending: 45, physical: 88 }
   }
 ];

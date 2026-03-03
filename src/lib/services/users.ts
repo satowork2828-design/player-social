@@ -1,10 +1,12 @@
 
 import { db } from "@/lib/firebase/config";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 
 export interface UserProfile {
   uid: string;
   email: string;
+  displayName?: string;
+  bio?: string;
   isAdmin: boolean;
   createdAt: string;
 }
@@ -29,7 +31,15 @@ export async function createUserProfile(uid: string, email: string) {
   await setDoc(docRef, {
     uid,
     email,
-    isAdmin: false, // Default role
+    isAdmin: false,
     createdAt: new Date().toISOString(),
   });
+}
+
+/**
+ * Updates an existing user profile.
+ */
+export async function updateUserProfile(uid: string, data: Partial<Omit<UserProfile, 'uid' | 'isAdmin' | 'createdAt'>>) {
+  const docRef = doc(db, "users", uid);
+  await updateDoc(docRef, data);
 }

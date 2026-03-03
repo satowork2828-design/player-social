@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Trophy, ShieldCheck, PenSquare, Megaphone, LogOut, User as UserIcon } from 'lucide-react';
+import { Trophy, ShieldCheck, PenSquare, Megaphone, LogOut, User as UserIcon, GitCompare, UserCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { onAuthStateChanged, signOut, User } from '@/lib/services/auth';
 import { getUserProfile } from '@/lib/services/users';
@@ -22,8 +22,8 @@ import { auth } from "@/lib/firebase/config";
 
 const navItems = [
   { name: 'Players', href: '/', icon: Trophy },
+  { name: 'Compare', href: '/compare', icon: GitCompare },
   { name: 'Review', href: '/submit-review', icon: PenSquare },
-  { name: 'Advertise', href: '/submit-ad', icon: Megaphone },
 ];
 
 export function Navbar() {
@@ -119,6 +119,12 @@ export function Navbar() {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/profile" className="cursor-pointer">
+                        <UserCircle className="mr-2 h-4 w-4" />
+                        <span>My Profile</span>
+                      </Link>
+                    </DropdownMenuItem>
                     {isAdmin && (
                       <DropdownMenuItem asChild>
                         <Link href="/admin/players" className="cursor-pointer">

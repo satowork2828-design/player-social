@@ -1,17 +1,49 @@
 
+"use client";
+
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getPlayers } from '@/lib/services/players';
 import { getApprovedAds } from '@/lib/services/ads';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Star, TrendingUp, Info, Megaphone } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Star, TrendingUp, Info, Megaphone, Search, Filter, Loader2 } from 'lucide-react';
+import { Player, AdSubmission } from '@/lib/mock-data';
 
-export default async function Home() {
-  const [players, approvedAds] = await Promise.all([
-    getPlayers(),
-    getApprovedAds()
-  ]);
+export default function Home() {
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [approvedAds, setApprovedAds] = useState<AdSubmission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [posFilter, setPosFilter] = useState("All");
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [pData, aData] = await Promise.all([
+          getPlayers(),
+          getApprovedAds()
+        ]);
+        setPlayers(pData);
+        setApprovedAds(aData);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  const filteredPlayers = players.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
+                         p.team.toLowerCase().includes(search.toLowerCase());
+    const matchesPos = posFilter === "All" || p.position === posFilter;
+    return matchesSearch && matchesPos;
+  });
 
   return (
     <div className="min-h-screen pb-20">
@@ -48,19 +80,44 @@ export default async function Home() {
       <section className="container mx-auto px-4 mt-12">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           
-          {/* Player Grid (3/4 width) */}
           <div className="lg:col-span-3">
-            <div className="flex items-center justify-between mb-8 border-b border-border pb-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 border-b border-border pb-6 gap-4">
               <h2 className="text-3xl font-headline font-bold">Featured Players</h2>
-              <div className="flex gap-2">
-                <span className="text-muted-foreground text-sm">Sort by: </span>
-                <button className="text-primary font-medium text-sm">Rating</button>
+              
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Search name or team..." 
+                    className="pl-9 h-10"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+                <Select value={posFilter} onValueChange={setPosFilter}>
+                  <SelectTrigger className="w-full sm:w-40 h-10">
+                    <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
+                    <SelectValue placeholder="Position" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Positions</SelectItem>
+                    <SelectItem value="Forward">Forward</SelectItem>
+                    <SelectItem value="Midfielder">Midfielder</SelectItem>
+                    <SelectItem value="Defender">Defender</SelectItem>
+                    <SelectItem value="Goalkeeper">Goalkeeper</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            {players.length > 0 ? (
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+                <p className="text-muted-foreground">Syncing tactical data...</p>
+              </div>
+            ) : filteredPlayers.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {players.map((player) => (
+                {filteredPlayers.map((player) => (
                   <Link key={player.id} href={`/players/${player.id}`}>
                     <Card className="group overflow-hidden bg-card/50 hover:bg-card border-border/50 hover:border-primary/50 transition-all duration-300">
                       <div className="relative h-64 overflow-hidden">
@@ -103,12 +160,11 @@ export default async function Home() {
               </div>
             ) : (
               <div className="text-center py-20 bg-card/10 rounded-xl border border-dashed border-border">
-                <p className="text-muted-foreground">No players found. Please add players to the "players" collection in Firestore.</p>
+                <p className="text-muted-foreground">No matching athletes found in current filtered roster.</p>
               </div>
             )}
           </div>
 
-          {/* Sidebar Ads (1/4 width) */}
           <div className="lg:col-span-1 space-y-6">
             <div className="flex items-center gap-3 border-b border-border pb-4 mb-4">
               <Megaphone className="w-5 h-5 text-accent" />

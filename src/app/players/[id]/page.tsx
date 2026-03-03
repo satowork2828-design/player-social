@@ -1,5 +1,6 @@
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getPlayerById } from '@/lib/services/players';
 import { getApprovedReviewsByPlayer } from '@/lib/services/reviews';
@@ -128,25 +129,32 @@ export default async function PlayerPage({ params }: { params: { id: string } })
             <h3 className="text-2xl font-headline font-bold">Sponsored</h3>
           </div>
           
-          {approvedAds.map((ad) => (
-            <Card key={ad.id} className="overflow-hidden bg-accent/5 border-accent/20 group cursor-pointer hover:border-accent/50 transition-all">
-              <div className="relative h-48">
-                <Image
-                  src={ad.imageUrl}
-                  alt={ad.title}
-                  fill
-                  className="object-cover"
-                  data-ai-hint="advertisement banner"
-                />
-                <Badge className="absolute top-2 right-2 bg-accent text-accent-foreground font-bold text-[10px]">SPONSORED</Badge>
-              </div>
-              <CardContent className="p-4">
-                <p className="text-xs text-accent font-bold uppercase mb-1">{ad.company}</p>
-                <h4 className="font-headline font-bold mb-2 group-hover:text-accent transition-colors">{ad.title}</h4>
-                <p className="text-sm text-muted-foreground">{ad.content}</p>
-              </CardContent>
-            </Card>
-          ))}
+          {approvedAds.length > 0 ? (
+            approvedAds.map((ad) => (
+              <Card key={ad.id} className="overflow-hidden bg-accent/5 border-accent/20 group cursor-pointer hover:border-accent/50 transition-all">
+                <div className="relative h-48">
+                  <Image
+                    src={ad.imageUrl}
+                    alt={ad.title}
+                    fill
+                    className="object-cover"
+                    data-ai-hint="advertisement banner"
+                  />
+                  <Badge className="absolute top-2 right-2 bg-accent text-accent-foreground font-bold text-[10px]">SPONSORED</Badge>
+                </div>
+                <CardContent className="p-4">
+                  <p className="text-xs text-accent font-bold uppercase mb-1">{ad.company}</p>
+                  <h4 className="font-headline font-bold mb-2 group-hover:text-accent transition-colors">{ad.title}</h4>
+                  <p className="text-sm text-muted-foreground">{ad.content}</p>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <div className="p-8 text-center bg-card/20 rounded-xl border border-dashed border-border">
+              <p className="text-sm text-muted-foreground italic">Partner with PitchRating to see your brand here!</p>
+              <Link href="/submit-ad" className="text-xs text-accent hover:underline mt-2 inline-block">Learn More</Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

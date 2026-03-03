@@ -43,13 +43,13 @@ export default function AuthPage() {
     try {
       const userCredential = await signIn(values.email, values.password);
       
-      if (!userCredential.user.emailVerified) {
-        toast({
-          title: "Email Not Verified",
-          description: "Please check your inbox and verify your email address to access all features.",
-          variant: "default",
-        });
-      }
+      // if (!userCredential.user.emailVerified) {
+      //   toast({
+      //     title: "Email Not Verified",
+      //     description: "Please check your inbox and verify your email address to access all features.",
+      //     variant: "default",
+      //   });
+      // }
 
       toast({ title: "Welcome back!", description: "You have signed in successfully." });
       router.push('/');
@@ -71,13 +71,19 @@ export default function AuthPage() {
       
       // Create the user profile in Firestore
       await createUserProfile(userCredential.user.uid, values.email);
-      
+
+      console.log("sendVerificationEmail typeof =", typeof sendVerificationEmail);
       // Send verification email
-      await sendVerificationEmail(userCredential.user);
+      // await sendVerificationEmail(userCredential.user);
       
+      // toast({ 
+      //   title: "Account Created", 
+      //   description: "A verification email has been sent. Please confirm your email before continuing." 
+      // });
+
       toast({ 
         title: "Account Created", 
-        description: "A verification email has been sent. Please confirm your email before continuing." 
+        description: "Registration was successful." 
       });
       
       router.push('/');

@@ -1,20 +1,47 @@
 
 "use client";
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Trophy, ShieldCheck, PenSquare, LayoutDashboard, Megaphone } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Trophy, ShieldCheck, PenSquare, Megaphone, LogOut, User as UserIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { onAuthStateChanged, signOut, User } from '@/lib/services/auth';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const navItems = [
   { name: 'Players', href: '/', icon: Trophy },
   { name: 'Review', href: '/submit-review', icon: PenSquare },
   { name: 'Advertise', href: '/submit-ad', icon: Megaphone },
-  { name: 'Admin', href: '/admin/reviews', icon: ShieldCheck },
 ];
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged((user) => {
+      setUser(user);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/auth');
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -40,14 +67,70 @@ export function Navbar() {
               {item.name}
             </Link>
           ))}
+          {user && (
+            <Link
+              href="/admin/reviews"
+              className={cn(
+                "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
+                pathname.startsWith('/admin') ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Admin
+            </Link>
+          )}
         </div>
 
         <div className="flex items-center gap-4">
-          <Link href="/submit-review">
-             <button className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm font-semibold transition-all">
-                Submit Review
-             </button>
-          </Link>
+          {!loading && (
+            user ? (
+              <div className="flex items-center gap-4">
+                <Link href="/submit-review" className="hidden sm:block">
+                  <Button variant="default" size="sm" className="font-semibold">
+                    Submit Review
+                  </Button>
+                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                      <Avatar className="h-10 w-10 border border-border">
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {user.email?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">Analyst</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/players" className="cursor-pointer">
+                        <ShieldCheck className="mr-2 h-4 w-4" />
+                        <span>Management</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive cursor-pointer">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Sign out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ) : (
+              <Link href="/auth">
+                <Button variant="default" size="sm" className="font-semibold px-6">
+                  Sign In
+                </Button>
+              </Link>
+            )
+          )}
         </div>
       </div>
     </nav>

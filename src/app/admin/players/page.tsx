@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import { getPlayers, addPlayer, deletePlayer } from '@/lib/services/players';
-import { uploadImage } from '@/lib/services/storage';
 import { Player } from '@/lib/mock-data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Loader2, User, Trophy, Shield, Upload, ImageIcon } from 'lucide-react';
+import { Plus, Trash2, Loader2, User, Trophy, Shield, ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminPlayersPage() {
@@ -20,8 +19,6 @@ export default function AdminPlayersPage() {
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const { toast } = useToast();
 
   const [newPlayer, setNewPlayer] = useState<Omit<Player, 'id'>>({
@@ -50,25 +47,10 @@ export default function AdminPlayersPage() {
     }
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-    }
-  };
-
   const handleAddPlayer = async () => {
     setIsAdding(true);
     try {
-      let imageUrl = newPlayer.imageUrl;
-      
-      if (selectedFile) {
-        imageUrl = await uploadImage(selectedFile, 'players');
-      }
-
-      await addPlayer({ ...newPlayer, imageUrl });
+      await addPlayer(newPlayer);
       
       toast({ title: "Player Added", description: `${newPlayer.name} has been added to the roster.` });
       setDialogOpen(false);
@@ -91,8 +73,6 @@ export default function AdminPlayersPage() {
       imageUrl: 'https://picsum.photos/seed/new/400/500',
       stats: { goals: 0, assists: 0, matches: 0 }
     });
-    setSelectedFile(null);
-    setPreviewUrl(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -143,21 +123,6 @@ export default function AdminPlayersPage() {
                  <DialogTitle>Register New Player</DialogTitle>
                </DialogHeader>
                <div className="grid gap-4 py-4">
-                 <div className="flex flex-col items-center justify-center mb-4">
-                    <div className="w-32 h-32 rounded-full bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden relative group">
-                        {previewUrl ? (
-                            <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                        ) : (
-                            <ImageIcon className="w-8 h-8 text-muted-foreground opacity-50" />
-                        )}
-                        <label className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-                            <Upload className="w-6 h-6 text-white" />
-                            <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-                        </label>
-                    </div>
-                    <span className="text-xs text-muted-foreground mt-2">Upload Player Portrait</span>
-                 </div>
-
                  <div className="grid grid-cols-4 items-center gap-4">
                    <Label htmlFor="name" className="text-right">Name</Label>
                    <Input id="name" value={newPlayer.name} onChange={e => setNewPlayer({...newPlayer, name: e.target.value})} className="col-span-3" />
@@ -184,10 +149,14 @@ export default function AdminPlayersPage() {
                    <Label htmlFor="rating" className="text-right">Rating</Label>
                    <Input id="rating" type="number" value={newPlayer.rating} onChange={e => setNewPlayer({...newPlayer, rating: parseInt(e.target.value)})} className="col-span-3" />
                  </div>
+                 <div className="grid grid-cols-4 items-center gap-4">
+                   <Label htmlFor="imageUrl" className="text-right">Image URL</Label>
+                   <Input id="imageUrl" value={newPlayer.imageUrl} onChange={e => setNewPlayer({...newPlayer, imageUrl: e.target.value})} className="col-span-3" />
+                 </div>
                </div>
                <DialogFooter>
                  <Button onClick={handleAddPlayer} disabled={isAdding || !newPlayer.name}>
-                   {isAdding ? "Uploading & Saving..." : "Confirm Entry"}
+                   {isAdding ? "Saving..." : "Confirm Entry"}
                  </Button>
                </DialogFooter>
              </DialogContent>

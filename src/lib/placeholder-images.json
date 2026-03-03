@@ -1,3 +1,34 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "player-1",
+      "description": "Professional soccer player in action",
+      "imageUrl": "https://images.unsplash.com/photo-1761225092045-698d1c4a9f43?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxzb2NjZXIlMjBwbGF5ZXIlMjBhY3Rpb258ZW58MHx8fHwxNzcyNTMxMzE2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "soccer player action"
+    },
+    {
+      "id": "player-2",
+      "description": "Midfielder celebrating a goal",
+      "imageUrl": "https://images.unsplash.com/photo-1563223206-9718491bef59?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxmb290YmFsbCUyMGNlbGVicmF0aW9ufGVufDB8fHx8MTc3MjQ3OTg2Nnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "football celebration"
+    },
+    {
+      "id": "player-3",
+      "description": "Goalkeeper making a save",
+      "imageUrl": "https://images.unsplash.com/photo-1706975187219-cb69c0da53ca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzb2NjZXIlMjBnb2Fsa2VlcGVyfGVufDB8fHx8MTc3MjUzMTMxNnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "soccer goalkeeper"
+    },
+    {
+      "id": "stadium-1",
+      "description": "Modern illuminated soccer stadium",
+      "imageUrl": "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzdGFkaXVtJTIwbGlnaHRzfGVufDB8fHx8MTc3MjQ2MDUyN3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "stadium lights"
+    },
+    {
+      "id": "ad-banner",
+      "description": "Generic sports equipment ad",
+      "imageUrl": "https://images.unsplash.com/photo-1602211844066-d3bb556e983b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzcG9ydHMlMjBlcXVpcG1lbnR8ZW58MHx8fHwxNzcyNTMxMzE2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sports equipment"
+    }
+  ]
 }

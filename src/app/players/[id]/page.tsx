@@ -7,7 +7,7 @@ import { getApprovedReviewsByPlayer } from '@/lib/services/reviews';
 import { getApprovedAds } from '@/lib/services/ads';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Star, MessageSquare, Quote, Trophy, Info } from 'lucide-react';
+import { Star, MessageSquare, Quote, Trophy, Info, ShieldCheck } from 'lucide-react';
 import { ReviewSummary } from '@/components/players/ReviewSummary';
 
 export default async function PlayerPage({ params }: { params: { id: string } }) {
@@ -73,7 +73,7 @@ export default async function PlayerPage({ params }: { params: { id: string } })
               <span className="block text-2xl font-bold">{player.stats.assists}</span>
               <span className="text-xs text-muted-foreground uppercase">Assists</span>
             </div>
-            {player.stats.cleanSheets !== undefined && (
+            {player.stats.cleanSheets !== undefined && player.stats.cleanSheets > 0 && (
               <div className="bg-card/50 p-6 rounded-xl border border-border text-center">
                 <ShieldCheck className="w-6 h-6 text-accent mx-auto mb-2" />
                 <span className="block text-2xl font-bold">{player.stats.cleanSheets}</span>
@@ -158,25 +158,5 @@ export default async function PlayerPage({ params }: { params: { id: string } })
         </div>
       </div>
     </div>
-  );
-}
-
-function ShieldCheck(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-      <path d="m9 12 2 2 4-4" />
-    </svg>
   );
 }

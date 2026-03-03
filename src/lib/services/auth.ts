@@ -4,6 +4,7 @@ import {
   createUserWithEmailAndPassword, 
   signOut as firebaseSignOut,
   onAuthStateChanged,
+  sendEmailVerification as firebaseSendEmailVerification,
   User
 } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
@@ -21,4 +22,11 @@ export async function signUp(email: string, password: string) {
 
 export async function signOut() {
   return firebaseSignOut(auth);
+}
+
+/**
+ * Sends a verification email to the currently registered user.
+ */
+export async function sendVerificationEmail(user: User) {
+  return firebaseSendEmailVerification(user);
 }

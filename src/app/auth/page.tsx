@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signIn, signUp } from '@/lib/services/auth';
+import { signIn, signUp, sendVerificationEmail } from '@/lib/services/auth';
 import { createUserProfile } from '@/lib/services/users';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Trophy, LogIn, UserPlus, Loader2 } from 'lucide-react';
+import { Trophy, LogIn, UserPlus, Loader2, Mail } from 'lucide-react';
 
 const authSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -41,7 +41,16 @@ export default function AuthPage() {
   async function onLogin(values: AuthValues) {
     setIsLoading(true);
     try {
-      await signIn(values.email, values.password);
+      const userCredential = await signIn(values.email, values.password);
+      
+      if (!userCredential.user.emailVerified) {
+        toast({
+          title: "Email Not Verified",
+          description: "Please check your inbox and verify your email address to access all features.",
+          variant: "default",
+        });
+      }
+
       toast({ title: "Welcome back!", description: "You have signed in successfully." });
       router.push('/');
     } catch (error: any) {
@@ -59,9 +68,18 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       const userCredential = await signUp(values.email, values.password);
+      
+      // Create the user profile in Firestore
       await createUserProfile(userCredential.user.uid, values.email);
       
-      toast({ title: "Account Created", description: "You have registered successfully." });
+      // Send verification email
+      await sendVerificationEmail(userCredential.user);
+      
+      toast({ 
+        title: "Account Created", 
+        description: "A verification email has been sent. Please confirm your email before continuing." 
+      });
+      
       router.push('/');
     } catch (error: any) {
       toast({
@@ -174,6 +192,12 @@ export default function AuthPage() {
                       </FormItem>
                     )}
                   />
+                  <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg flex items-start gap-3">
+                    <Mail className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      We'll send a verification link to your email. You can browse the platform, but verification is required for full interaction.
+                    </p>
+                  </div>
                   <Button type="submit" className="w-full py-6 font-bold" disabled={isLoading}>
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                     Create Profile

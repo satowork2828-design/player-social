@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { auth } from "@/lib/firebase/config";
 
 const navItems = [
   { name: 'Players', href: '/', icon: Trophy },
@@ -31,7 +32,7 @@ export function Navbar() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged((user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
     });

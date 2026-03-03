@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { submitAd } from '@/lib/services/ads';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -37,15 +38,24 @@ export default function SubmitAdPage() {
 
   async function onSubmit(values: z.infer<typeof adSchema>) {
     setSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    toast({
-      title: "Proposal Received!",
-      description: "Our marketing team will review your content for approval.",
-    });
-    
-    setSubmitting(false);
-    router.push('/');
+    try {
+      await submitAd(values);
+      
+      toast({
+        title: "Proposal Received!",
+        description: "Our marketing team will review your content for approval.",
+      });
+      
+      router.push('/');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit proposal. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (

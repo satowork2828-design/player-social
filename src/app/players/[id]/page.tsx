@@ -1,7 +1,9 @@
 
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { players, reviews, ads } from '@/lib/mock-data';
+import { getPlayerById } from '@/lib/services/players';
+import { getApprovedReviewsByPlayer } from '@/lib/services/reviews';
+import { getApprovedAds } from '@/lib/services/ads';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star, MessageSquare, Quote, Trophy, Info } from 'lucide-react';
@@ -9,10 +11,14 @@ import { ReviewSummary } from '@/components/players/ReviewSummary';
 
 export default async function PlayerPage({ params }: { params: { id: string } }) {
   const { id } = await params;
-  const player = players.find(p => p.id === id);
-  const playerReviews = reviews.filter(r => r.playerId === id && r.status === 'approved');
+  const player = await getPlayerById(id);
   
   if (!player) notFound();
+
+  const [playerReviews, approvedAds] = await Promise.all([
+    getApprovedReviewsByPlayer(id),
+    getApprovedAds()
+  ]);
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-6xl">
@@ -122,7 +128,7 @@ export default async function PlayerPage({ params }: { params: { id: string } })
             <h3 className="text-2xl font-headline font-bold">Sponsored</h3>
           </div>
           
-          {ads.filter(a => a.status === 'approved').map((ad) => (
+          {approvedAds.map((ad) => (
             <Card key={ad.id} className="overflow-hidden bg-accent/5 border-accent/20 group cursor-pointer hover:border-accent/50 transition-all">
               <div className="relative h-48">
                 <Image

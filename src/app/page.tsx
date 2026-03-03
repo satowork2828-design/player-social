@@ -1,12 +1,14 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { players } from '@/lib/mock-data';
+import { getPlayers } from '@/lib/services/players';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Star, TrendingUp } from 'lucide-react';
 
-export default function Home() {
+export default async function Home() {
+  const players = await getPlayers();
+
   return (
     <div className="min-h-screen pb-20">
       {/* Hero Section */}
@@ -48,48 +50,54 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {players.map((player) => (
-            <Link key={player.id} href={`/players/${player.id}`}>
-              <Card className="group overflow-hidden bg-card/50 hover:bg-card border-border/50 hover:border-primary/50 transition-all duration-300">
-                <div className="relative h-64 overflow-hidden">
-                  <Image
-                    src={player.imageUrl}
-                    alt={player.name}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-110"
-                    data-ai-hint="soccer player portrait"
-                  />
-                  <div className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-md flex items-center gap-1">
-                    <Star className="w-4 h-4 text-primary fill-primary" />
-                    <span className="font-bold">{player.rating}</span>
+        {players.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {players.map((player) => (
+              <Link key={player.id} href={`/players/${player.id}`}>
+                <Card className="group overflow-hidden bg-card/50 hover:bg-card border-border/50 hover:border-primary/50 transition-all duration-300">
+                  <div className="relative h-64 overflow-hidden">
+                    <Image
+                      src={player.imageUrl}
+                      alt={player.name}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                      data-ai-hint="soccer player portrait"
+                    />
+                    <div className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-md flex items-center gap-1">
+                      <Star className="w-4 h-4 text-primary fill-primary" />
+                      <span className="font-bold">{player.rating}</span>
+                    </div>
                   </div>
-                </div>
-                <CardHeader className="p-4">
-                  <CardTitle className="text-xl group-hover:text-primary transition-colors">{player.name}</CardTitle>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">{player.team}</p>
-                    <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider">{player.position}</Badge>
-                  </div>
-                </CardHeader>
-                <CardFooter className="p-4 pt-0 flex justify-between text-xs text-muted-foreground">
-                  <div className="flex flex-col items-center">
-                    <span className="font-bold text-foreground">{player.stats.matches}</span>
-                    <span>Apps</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <span className="font-bold text-foreground">{player.stats.goals}</span>
-                    <span>Goals</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <span className="font-bold text-foreground">{player.stats.assists}</span>
-                    <span>Assists</span>
-                  </div>
-                </CardFooter>
-              </Card>
-            </Link>
-          ))}
-        </div>
+                  <CardHeader className="p-4">
+                    <CardTitle className="text-xl group-hover:text-primary transition-colors">{player.name}</CardTitle>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">{player.team}</p>
+                      <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider">{player.position}</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardFooter className="p-4 pt-0 flex justify-between text-xs text-muted-foreground">
+                    <div className="flex flex-col items-center">
+                      <span className="font-bold text-foreground">{player.stats.matches}</span>
+                      <span>Apps</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <span className="font-bold text-foreground">{player.stats.goals}</span>
+                      <span>Goals</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <span className="font-bold text-foreground">{player.stats.assists}</span>
+                      <span>Assists</span>
+                    </div>
+                  </CardFooter>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 bg-card/10 rounded-xl border border-dashed border-border">
+            <p className="text-muted-foreground">No players found. Please add players to the "players" collection in Firestore.</p>
+          </div>
+        )}
       </section>
     </div>
   );

@@ -1,34 +1,83 @@
 
 "use client";
 
-import { useState } from 'react';
-import { reviews as initialReviews, players } from '@/lib/mock-data';
+import { useState, useEffect } from 'react';
+import { getAllReviews, updateReviewStatus, deleteReview } from '@/lib/services/reviews';
+import { getPlayers } from '@/lib/services/players';
+import { Review, Player } from '@/lib/mock-data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Check, X, Trash2, Edit, ExternalLink } from 'lucide-react';
+import { Check, X, Trash2, ExternalLink, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
 export default function AdminReviewsPage() {
-  const [reviews, setReviews] = useState(initialReviews);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const handleStatus = (id: string, status: 'approved' | 'rejected') => {
-    setReviews(prev => prev.map(r => r.id === id ? { ...r, status } : r));
-    toast({
-      title: `Review ${status.charAt(0).toUpperCase() + status.slice(1)}`,
-      description: `The article has been ${status}.`,
-    });
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [reviewsData, playersData] = await Promise.all([
+          getAllReviews(),
+          getPlayers()
+        ]);
+        setReviews(reviewsData);
+        setPlayers(playersData);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  const handleStatus = async (id: string, status: 'approved' | 'rejected') => {
+    try {
+      await updateReviewStatus(id, status);
+      setReviews(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+      toast({
+        title: `Review ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+        description: `The article has been ${status}.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update status.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setReviews(prev => prev.filter(r => r.id !== id));
-    toast({
-      title: "Review Deleted",
-      variant: "destructive",
-    });
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteReview(id);
+      setReviews(prev => prev.filter(r => r.id !== id));
+      toast({
+        title: "Review Deleted",
+        variant: "destructive",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete review.",
+        variant: "destructive",
+      });
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Loading reviews...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -63,7 +112,7 @@ export default function AdminReviewsPage() {
                 <TableRow key={review.id} className="hover:bg-muted/20 transition-colors">
                   <TableCell className="font-medium">
                     <div className="flex flex-col">
-                      <span>{player?.name}</span>
+                      <span>{player?.name || 'Unknown Player'}</span>
                       <span className="text-xs text-muted-foreground">{player?.team}</span>
                     </div>
                   </TableCell>

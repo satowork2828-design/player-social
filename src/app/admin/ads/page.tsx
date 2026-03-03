@@ -1,34 +1,77 @@
 
 "use client";
 
-import { useState } from 'react';
-import { ads as initialAds } from '@/lib/mock-data';
+import { useState, useEffect } from 'react';
+import { getAllAds, updateAdStatus, deleteAd } from '@/lib/services/ads';
+import { AdSubmission } from '@/lib/mock-data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Check, X, Trash2, Image as ImageIcon } from 'lucide-react';
+import { Check, X, Trash2, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
 export default function AdminAdsPage() {
-  const [ads, setAds] = useState(initialAds);
+  const [ads, setAds] = useState<AdSubmission[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const handleStatus = (id: string, status: 'approved' | 'rejected') => {
-    setAds(prev => prev.map(a => a.id === id ? { ...a, status } : a));
-    toast({
-      title: `Ad ${status.charAt(0).toUpperCase() + status.slice(1)}`,
-      description: `The proposal has been marked as ${status}.`,
-    });
+  useEffect(() => {
+    async function loadAds() {
+      try {
+        const data = await getAllAds();
+        setAds(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadAds();
+  }, []);
+
+  const handleStatus = async (id: string, status: 'approved' | 'rejected') => {
+    try {
+      await updateAdStatus(id, status);
+      setAds(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+      toast({
+        title: `Ad ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+        description: `The proposal has been marked as ${status}.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update status.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setAds(prev => prev.filter(a => a.id !== id));
-    toast({
-      title: "Ad Removed",
-      variant: "destructive",
-    });
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteAd(id);
+      setAds(prev => prev.filter(a => a.id !== id));
+      toast({
+        title: "Ad Removed",
+        variant: "destructive",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete ad.",
+        variant: "destructive",
+      });
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Loading advertisements...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-12">

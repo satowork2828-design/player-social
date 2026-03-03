@@ -1,9 +1,11 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { players } from '@/lib/mock-data';
+import { getPlayers } from '@/lib/services/players';
+import { submitReview } from '@/lib/services/reviews';
+import { Player } from '@/lib/mock-data';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -20,12 +22,22 @@ const reviewSchema = z.object({
   rating: z.string().min(1, "Please provide a rating"),
   title: z.string().min(5, "Title must be at least 5 characters"),
   content: z.string().min(20, "Review content must be at least 20 characters"),
+  author: z.string().min(2, "Author name is required"),
 });
 
 export default function SubmitReviewPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [players, setPlayers] = useState<Player[]>([]);
+
+  useEffect(() => {
+    async function loadPlayers() {
+      const data = await getPlayers();
+      setPlayers(data);
+    }
+    loadPlayers();
+  }, []);
 
   const form = useForm<z.infer<typeof reviewSchema>>({
     resolver: zodResolver(reviewSchema),
@@ -34,21 +46,36 @@ export default function SubmitReviewPage() {
       rating: "5",
       title: "",
       content: "",
+      author: "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof reviewSchema>) {
     setSubmitting(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    toast({
-      title: "Review Submitted!",
-      description: "Your review is pending administrator approval.",
-    });
-    
-    setSubmitting(false);
-    router.push('/');
+    try {
+      await submitReview({
+        playerId: values.playerId,
+        rating: parseInt(values.rating),
+        title: values.title,
+        content: values.content,
+        author: values.author,
+      });
+      
+      toast({
+        title: "Review Submitted!",
+        description: "Your review is pending administrator approval.",
+      });
+      
+      router.push('/');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit review. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -64,6 +91,20 @@ export default function SubmitReviewPage() {
       <div className="bg-card p-8 rounded-2xl border border-border shadow-xl">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="author"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Author Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Your Name or Alias" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="playerId"

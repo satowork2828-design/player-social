@@ -2,7 +2,11 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { getPlayers, addPlayer, updatePlayer, deletePlayer } from '@/lib/services/players';
+import { getUserProfile } from '@/lib/services/users';
+import { onAuthStateChanged } from '@/lib/services/auth';
+import { auth } from '@/lib/firebase/config';
 import { Player } from '@/lib/mock-data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -11,16 +15,18 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Pencil, Loader2, User, Trophy, Shield, ImageIcon } from 'lucide-react';
+import { Plus, Trash2, Pencil, Loader2, User, Trophy, Shield, ImageIcon, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminPlayersPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   const [formState, setFormState] = useState<Omit<Player, 'id'>>({
     name: '',
@@ -33,7 +39,20 @@ export default function AdminPlayersPage() {
   });
 
   useEffect(() => {
-    loadPlayers();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const profile = await getUserProfile(user.uid);
+        if (profile?.isAdmin) {
+          setIsAuthorized(true);
+          loadPlayers();
+        } else {
+          setIsAuthorized(false);
+        }
+      } else {
+        setIsAuthorized(false);
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
   async function loadPlayers() {
@@ -107,11 +126,24 @@ export default function AdminPlayersPage() {
     }
   };
 
-  if (loading && players.length === 0) {
+  if (isAuthorized === false) {
+    return (
+      <div className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
+        <ShieldAlert className="w-16 h-16 text-destructive mb-4" />
+        <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+        <p className="text-muted-foreground mb-6">You do not have administrative privileges.</p>
+        <Link href="/">
+          <Button>Return to Home</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  if (isAuthorized === null || (loading && players.length === 0)) {
     return (
       <div className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
         <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Loading roster...</p>
+        <p className="text-muted-foreground">Verifying permissions...</p>
       </div>
     );
   }

@@ -2,33 +2,54 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { getAllAds, updateAdStatus, deleteAd } from '@/lib/services/ads';
+import { getUserProfile } from '@/lib/services/users';
+import { onAuthStateChanged } from '@/lib/services/auth';
+import { auth } from '@/lib/firebase/config';
 import { AdSubmission } from '@/lib/mock-data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Check, X, Trash2, Image as ImageIcon, Loader2, Users } from 'lucide-react';
+import { Check, X, Trash2, Image as ImageIcon, Loader2, Users, ShieldAlert } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
 export default function AdminAdsPage() {
   const [ads, setAds] = useState<AdSubmission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
-    async function loadAds() {
-      try {
-        const data = await getAllAds();
-        setAds(data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const profile = await getUserProfile(user.uid);
+        if (profile?.isAdmin) {
+          setIsAuthorized(true);
+          loadAds();
+        } else {
+          setIsAuthorized(false);
+        }
+      } else {
+        setIsAuthorized(false);
       }
-    }
-    loadAds();
+    });
+    return () => unsubscribe();
   }, []);
+
+  async function loadAds() {
+    setLoading(true);
+    try {
+      const data = await getAllAds();
+      setAds(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const handleStatus = async (id: string, status: 'approved' | 'rejected') => {
     try {
@@ -64,11 +85,24 @@ export default function AdminAdsPage() {
     }
   };
 
-  if (loading) {
+  if (isAuthorized === false) {
+    return (
+      <div className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
+        <ShieldAlert className="w-16 h-16 text-destructive mb-4" />
+        <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+        <p className="text-muted-foreground mb-6">You do not have administrative privileges.</p>
+        <Link href="/">
+          <Button>Return to Home</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  if (isAuthorized === null || loading) {
     return (
       <div className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
         <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Loading advertisements...</p>
+        <p className="text-muted-foreground">Verifying permissions...</p>
       </div>
     );
   }

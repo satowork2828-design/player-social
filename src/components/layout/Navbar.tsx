@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Trophy, ShieldCheck, PenSquare, Megaphone, LogOut, User as UserIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { onAuthStateChanged, signOut, User } from '@/lib/services/auth';
+import { getUserProfile } from '@/lib/services/users';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -29,11 +30,18 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
+      if (user) {
+        const profile = await getUserProfile(user.uid);
+        setIsAdmin(profile?.isAdmin || false);
+      } else {
+        setIsAdmin(false);
+      }
       setLoading(false);
     });
     return () => unsubscribe();
@@ -68,9 +76,9 @@ export function Navbar() {
               {item.name}
             </Link>
           ))}
-          {user && (
+          {isAdmin && (
             <Link
-              href="/admin/reviews"
+              href="/admin/players"
               className={cn(
                 "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
                 pathname.startsWith('/admin') ? "text-primary" : "text-muted-foreground"
@@ -104,19 +112,21 @@ export function Navbar() {
                   <DropdownMenuContent className="w-56" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">Analyst</p>
+                        <p className="text-sm font-medium leading-none">{isAdmin ? 'Admin Analyst' : 'Analyst'}</p>
                         <p className="text-xs leading-none text-muted-foreground">
                           {user.email}
                         </p>
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin/players" className="cursor-pointer">
-                        <ShieldCheck className="mr-2 h-4 w-4" />
-                        <span>Management</span>
-                      </Link>
-                    </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin/players" className="cursor-pointer">
+                          <ShieldCheck className="mr-2 h-4 w-4" />
+                          <span>Management</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Sign out</span>

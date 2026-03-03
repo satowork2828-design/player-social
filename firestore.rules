@@ -2,19 +2,33 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper function to check if the user is an admin
+    function isAdmin() {
+      return request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if isAdmin();
+    }
+
     match /players/{playerId} {
       allow read: if true;
-      allow write: if true; // In production, add admin auth checks
+      allow write: if isAdmin();
     }
+    
     match /reviews/{reviewId} {
       allow read: if true;
-      allow create: if true;
-      allow update, delete: if true; // In production, add auth checks
+      allow create: if request.auth != null;
+      allow update, delete: if isAdmin();
     }
+    
     match /ads/{adId} {
       allow read: if true;
-      allow create: if true;
-      allow update, delete: if true; // In production, add auth checks
+      allow create: if true; // Potential partners can submit
+      allow update, delete: if isAdmin();
     }
   }
 }

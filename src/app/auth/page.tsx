@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn, signUp } from '@/lib/services/auth';
+import { createUserProfile } from '@/lib/services/users';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -57,7 +58,9 @@ export default function AuthPage() {
   async function onRegister(values: AuthValues) {
     setIsLoading(true);
     try {
-      await signUp(values.email, values.password);
+      const userCredential = await signUp(values.email, values.password);
+      await createUserProfile(userCredential.user.uid, values.email);
+      
       toast({ title: "Account Created", description: "You have registered successfully." });
       router.push('/');
     } catch (error: any) {

@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { getPlayers, addPlayer, deletePlayer } from '@/lib/services/players';
+import { getPlayers, addPlayer, updatePlayer, deletePlayer } from '@/lib/services/players';
 import { Player } from '@/lib/mock-data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -11,17 +11,18 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Loader2, User, Trophy, Shield, ImageIcon } from 'lucide-react';
+import { Plus, Trash2, Pencil, Loader2, User, Trophy, Shield, ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminPlayersPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdding, setIsAdding] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const [newPlayer, setNewPlayer] = useState<Omit<Player, 'id'>>({
+  const [formState, setFormState] = useState<Omit<Player, 'id'>>({
     name: '',
     team: '',
     position: 'Forward',
@@ -47,24 +48,29 @@ export default function AdminPlayersPage() {
     }
   }
 
-  const handleAddPlayer = async () => {
-    setIsAdding(true);
+  const handleSavePlayer = async () => {
+    setIsSaving(true);
     try {
-      await addPlayer(newPlayer);
+      if (editingPlayerId) {
+        await updatePlayer(editingPlayerId, formState);
+        toast({ title: "Player Updated", description: `${formState.name} has been updated successfully.` });
+      } else {
+        await addPlayer(formState);
+        toast({ title: "Player Added", description: `${formState.name} has been added to the roster.` });
+      }
       
-      toast({ title: "Player Added", description: `${newPlayer.name} has been added to the roster.` });
       setDialogOpen(false);
       loadPlayers();
       resetForm();
     } catch (error) {
-      toast({ title: "Error", description: "Failed to add player.", variant: "destructive" });
+      toast({ title: "Error", description: `Failed to ${editingPlayerId ? 'update' : 'save'} player.`, variant: "destructive" });
     } finally {
-      setIsAdding(false);
+      setIsSaving(false);
     }
   };
 
   const resetForm = () => {
-    setNewPlayer({
+    setFormState({
       name: '',
       team: '',
       position: 'Forward',
@@ -73,6 +79,21 @@ export default function AdminPlayersPage() {
       imageUrl: 'https://picsum.photos/seed/new/400/500',
       stats: { goals: 0, assists: 0, matches: 0 }
     });
+    setEditingPlayerId(null);
+  };
+
+  const handleEditClick = (player: Player) => {
+    setFormState({
+      name: player.name,
+      team: player.team,
+      position: player.position,
+      age: player.age,
+      rating: player.rating,
+      imageUrl: player.imageUrl,
+      stats: { ...player.stats }
+    });
+    setEditingPlayerId(player.id);
+    setDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -118,22 +139,22 @@ export default function AdminPlayersPage() {
                  <Plus className="w-4 h-4 mr-2" /> Add Player
                </Button>
              </DialogTrigger>
-             <DialogContent className="sm:max-w-[500px]">
+             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                <DialogHeader>
-                 <DialogTitle>Register New Player</DialogTitle>
+                 <DialogTitle>{editingPlayerId ? 'Update Player Profile' : 'Register New Player'}</DialogTitle>
                </DialogHeader>
-               <div className="grid gap-4 py-4">
+               <div className="grid gap-6 py-4">
                  <div className="grid grid-cols-4 items-center gap-4">
                    <Label htmlFor="name" className="text-right">Name</Label>
-                   <Input id="name" value={newPlayer.name} onChange={e => setNewPlayer({...newPlayer, name: e.target.value})} className="col-span-3" />
+                   <Input id="name" value={formState.name} onChange={e => setFormState({...formState, name: e.target.value})} className="col-span-3" />
                  </div>
                  <div className="grid grid-cols-4 items-center gap-4">
                    <Label htmlFor="team" className="text-right">Team</Label>
-                   <Input id="team" value={newPlayer.team} onChange={e => setNewPlayer({...newPlayer, team: e.target.value})} className="col-span-3" />
+                   <Input id="team" value={formState.team} onChange={e => setFormState({...formState, team: e.target.value})} className="col-span-3" />
                  </div>
                  <div className="grid grid-cols-4 items-center gap-4">
                    <Label htmlFor="position" className="text-right">Position</Label>
-                   <Select onValueChange={val => setNewPlayer({...newPlayer, position: val})} defaultValue={newPlayer.position}>
+                   <Select onValueChange={val => setFormState({...formState, position: val})} value={formState.position}>
                      <SelectTrigger className="col-span-3">
                        <SelectValue placeholder="Position" />
                      </SelectTrigger>
@@ -145,18 +166,42 @@ export default function AdminPlayersPage() {
                      </SelectContent>
                    </Select>
                  </div>
-                 <div className="grid grid-cols-4 items-center gap-4">
-                   <Label htmlFor="rating" className="text-right">Rating</Label>
-                   <Input id="rating" type="number" value={newPlayer.rating} onChange={e => setNewPlayer({...newPlayer, rating: parseInt(e.target.value)})} className="col-span-3" />
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 items-center gap-4">
+                        <Label htmlFor="rating" className="text-right">Rating</Label>
+                        <Input id="rating" type="number" value={formState.rating} onChange={e => setFormState({...formState, rating: parseInt(e.target.value)})} />
+                    </div>
+                    <div className="grid grid-cols-2 items-center gap-4">
+                        <Label htmlFor="age" className="text-right">Age</Label>
+                        <Input id="age" type="number" value={formState.age} onChange={e => setFormState({...formState, age: parseInt(e.target.value)})} />
+                    </div>
                  </div>
                  <div className="grid grid-cols-4 items-center gap-4">
                    <Label htmlFor="imageUrl" className="text-right">Image URL</Label>
-                   <Input id="imageUrl" value={newPlayer.imageUrl} onChange={e => setNewPlayer({...newPlayer, imageUrl: e.target.value})} className="col-span-3" />
+                   <Input id="imageUrl" value={formState.imageUrl} onChange={e => setFormState({...formState, imageUrl: e.target.value})} className="col-span-3" />
+                 </div>
+
+                 <div className="border-t pt-4">
+                    <h4 className="text-sm font-semibold mb-4 text-center">Performance Statistics</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="matches">Matches</Label>
+                            <Input id="matches" type="number" value={formState.stats.matches} onChange={e => setFormState({...formState, stats: {...formState.stats, matches: parseInt(e.target.value)}})} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="goals">Goals</Label>
+                            <Input id="goals" type="number" value={formState.stats.goals} onChange={e => setFormState({...formState, stats: {...formState.stats, goals: parseInt(e.target.value)}})} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="assists">Assists</Label>
+                            <Input id="assists" type="number" value={formState.stats.assists} onChange={e => setFormState({...formState, stats: {...formState.stats, assists: parseInt(e.target.value)}})} />
+                        </div>
+                    </div>
                  </div>
                </div>
                <DialogFooter>
-                 <Button onClick={handleAddPlayer} disabled={isAdding || !newPlayer.name}>
-                   {isAdding ? "Saving..." : "Confirm Entry"}
+                 <Button onClick={handleSavePlayer} disabled={isSaving || !formState.name}>
+                   {isSaving ? "Saving..." : editingPlayerId ? "Update Player" : "Confirm Entry"}
                  </Button>
                </DialogFooter>
              </DialogContent>
@@ -195,9 +240,14 @@ export default function AdminPlayersPage() {
                    </div>
                 </TableCell>
                 <TableCell className="text-right">
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(player.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10" onClick={() => handleEditClick(player)}>
+                            <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(player.id)}>
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </div>
                 </TableCell>
               </TableRow>
             ))}

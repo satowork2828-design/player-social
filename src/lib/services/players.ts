@@ -7,7 +7,8 @@ import {
   doc, 
   query, 
   orderBy, 
-  limit 
+  addDoc,
+  deleteDoc
 } from "firebase/firestore";
 import { Player } from "@/lib/mock-data";
 
@@ -27,4 +28,14 @@ export async function getPlayerById(id: string): Promise<Player | null> {
     return { id: docSnap.id, ...docSnap.data() } as Player;
   }
   return null;
+}
+
+export async function addPlayer(player: Omit<Player, "id">): Promise<string> {
+  const docRef = await addDoc(collection(db, PLAYERS_COLLECTION), player);
+  return docRef.id;
+}
+
+export async function deletePlayer(id: string): Promise<void> {
+  const docRef = doc(db, PLAYERS_COLLECTION, id);
+  await deleteDoc(docRef);
 }

@@ -8,7 +8,7 @@ import { Review, Player } from '@/lib/mock-data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Check, X, Trash2, ExternalLink, Loader2 } from 'lucide-react';
+import { Check, X, Trash2, ExternalLink, Loader2, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
@@ -87,8 +87,11 @@ export default function AdminReviewsPage() {
           <p className="text-muted-foreground">Approve, moderate, and manage player analysis articles.</p>
         </div>
         <div className="flex gap-2">
+           <Link href="/admin/players">
+             <Button variant="outline"><Users className="w-4 h-4 mr-2" /> Players</Button>
+           </Link>
            <Link href="/admin/ads">
-             <Button variant="outline">Manage Advertisements</Button>
+             <Button variant="outline">Campaigns</Button>
            </Link>
         </div>
       </div>

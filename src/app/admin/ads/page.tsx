@@ -7,7 +7,7 @@ import { AdSubmission } from '@/lib/mock-data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Check, X, Trash2, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Check, X, Trash2, Image as ImageIcon, Loader2, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
@@ -81,8 +81,11 @@ export default function AdminAdsPage() {
           <p className="text-muted-foreground">Manage sponsored content and advertisements.</p>
         </div>
         <div className="flex gap-2">
+           <Link href="/admin/players">
+             <Button variant="outline"><Users className="w-4 h-4 mr-2" /> Players</Button>
+           </Link>
            <Link href="/admin/reviews">
-             <Button variant="outline">Manage Reviews</Button>
+             <Button variant="outline">Reviews</Button>
            </Link>
         </div>
       </div>

@@ -1,4 +1,3 @@
-
 import { db } from "@/lib/firebase/config";
 import { 
   collection, 
@@ -36,6 +35,11 @@ export async function getAllAds(): Promise<AdSubmission[]> {
 export async function updateAdStatus(id: string, status: "approved" | "rejected"): Promise<void> {
   const docRef = doc(db, ADS_COLLECTION, id);
   await updateDoc(docRef, { status });
+}
+
+export async function updateAd(id: string, ad: Partial<Omit<AdSubmission, "id">>): Promise<void> {
+  const docRef = doc(db, ADS_COLLECTION, id);
+  await updateDoc(docRef, ad);
 }
 
 export async function deleteAd(id: string): Promise<void> {
